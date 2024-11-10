@@ -1,0 +1,69 @@
+import pandas as pd
+import numpy as np
+
+df=pd.read_csv('emails.csv')
+
+df
+
+df.isnull().sum()
+
+Z=df.drop('Prediction',axis=1)
+X=Z.drop('Email No.',axis=1)
+y=df['Prediction']
+
+X
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3,random_state=0)
+
+from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+knn_predictions = knn.predict(X_test)
+
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+
+print("KNN Performance")
+print(classification_report(y_test, knn_predictions))
+print("\n-------------------------------------------------")
+print("Accuracy:", accuracy_score(y_test, knn_predictions))
+print("\n-------------------------------------------------")
+print("Confusion Matrix:\n", confusion_matrix(y_test, knn_predictions))
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+cm=confusion_matrix(y_test,knn_predictions)
+sns.heatmap(cm,annot=True,cmap='Blues',fmt='d', cbar=False)
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted')
+plt.ylabel('Actual Class')
+plt.xticks([0, 1], ['Not Spam', 'Spam'])
+plt.yticks([0, 1], ['Not Spam', 'Spam'])
+plt.show()
+
+from sklearn.svm import SVC
+
+svm = SVC(kernel='linear')
+svm.fit(X_train, y_train)
+svm_predictions = svm.predict(X_test)
+
+print("\nSVM Performance")
+print(classification_report(y_test, svm_predictions))
+print("\n-------------------------------------------------")
+print("Accuracy:", accuracy_score(y_test, svm_predictions))
+print("\n-------------------------------------------------")
+print("Confusion Matrix:\n", confusion_matrix(y_test, svm_predictions))
+
+svm = SVC(kernel='rbf', random_state=1, gamma=0.1,C=0.8)
+svm.fit(X_train, y_train)
+svm_predictions = svm.predict(X_test)
+
+print("\nSVM Performance")
+print(classification_report(y_test, svm_predictions))
+print("\n-------------------------------------------------")
+print("Accuracy:", accuracy_score(y_test, svm_predictions))
+print("\n-------------------------------------------------")
+print("Confusion Matrix:\n", confusion_matrix(y_test, svm_predictions))
+
