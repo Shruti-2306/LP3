@@ -1,0 +1,139 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+dfx = pd.read_csv('uber.csv')
+
+dfx
+
+df = dfx.dropna()
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+  R = 6371
+  dlat = np.radians(lat2 - lat1)
+  dlon = np.radians(lon2 - lon1)
+  a = np.sin(dlat/2) * np.sin(dlat/2) + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon/2) * np.sin(dlon/2)
+  c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
+  distance = R * c  # Distance in kilometers
+  return distance
+
+df['distance'] = df.apply(lambda row: haversine_distance(row['pickup_latitude'], row['pickup_longitude'], row['dropoff_latitude'], row['dropoff_longitude']), axis=1)
+
+df = df.drop(['pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude'], axis=1)
+
+# Visualize the 'fare' and 'distance' columns to identify outliers
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+sns.boxplot(df['fare_amount'])
+plt.title('Fare Boxplot')
+plt.subplot(1, 2, 2)
+sns.boxplot(df['distance'])
+plt.title('Distance Boxplot')
+plt.show()
+
+# Remove outliers based on IQR
+Q1 = df['fare_amount'].quantile(0.25)
+Q3 = df['fare_amount'].quantile(0.75)
+IQR = Q3 - Q1
+df = df[(df['fare_amount'] >= Q1 - 1.5 * IQR) & (df['fare_amount'] <= Q3 + 1.5 * IQR)]
+# df = df.drop(df[(df['fare_amount'] < Q1 - 1.5 * IQR) | (df['fare_amount'] > Q3 + 1.5 * IQR)].index)
+Q1 = df['distance'].quantile(0.25)
+Q3 = df['distance'].quantile(0.75)
+IQR = Q3 - Q1
+df = df[(df['distance'] >= Q1 - 1.5 * IQR) & (df['distance'] <= Q3 + 1.5 * IQR)]
+# df = df.drop(df[(df['fare_amount'] < Q1 - 1.5 * IQR) | (df['fare_amount'] > Q3 + 1.5 * IQR)].index)
+
+# Calculate the correlation matrix
+cm = df[['distance','fare_amount']]
+correlation_matrix = cm.corr()
+# Visualize the correlation matrix using a heatmap
+print(correlation_matrix)
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+
+df2=df.drop(columns=['key','pickup_datetime'])
+df2
+
+sns.heatmap(df2.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+
+x=df['distance']
+y=df['fare_amount']
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2,random_state=0)
+lr=LinearRegression()
+model=lr.fit(x_train.values.reshape(-1,1),y_train.values.reshape(-1,1))
+
+y_train_pred = lr.predict(x_train.values.reshape(-1,1))
+y_test_pred = lr.predict(x_test.values.reshape(-1,1))
+
+plt.xlabel('Distance')
+plt.ylabel('Fare Amount')
+plt.title("True value vs Predicted value")
+plt.legend(loc= 'upper left')
+plt.plot(x_test,y_test_pred,color='red',linewidth=3)
+plt.plot(x_train,y_train_pred,color='green',linewidth=3)
+plt.xticks()
+plt.yticks()
+plt.show()
+
+#Evaluation Metrics
+from sklearn.metrics import mean_squared_error
+mse = mean_squared_error(y_train, y_train_pred)
+print("The model performance for training set")
+print("--------------------------------------")
+print('MSE is {}'.format(mse))
+print("\n")
+
+mse = mean_squared_error(y_test, y_test_pred)
+print("The model performance for testing set")
+print("--------------------------------------")
+print('MSE is {}'.format(mse))
+print("\n\n\n")
+
+from sklearn.metrics import mean_absolute_error
+mae = mean_absolute_error(y_train, y_train_pred)
+print("The model performance for training set")
+print("--------------------------------------")
+print('MAE is {}'.format(mae))
+print("\n")
+
+print("The model performance for testing set")
+print("--------------------------------------")
+mae = mean_absolute_error(y_test, y_test_pred)
+print('MAE is {}'.format(mae))
+print("\n\n\n")
+
+from sklearn.metrics import r2_score
+rmse = (np.sqrt(mean_squared_error(y_train, y_train_pred)))
+r2 = r2_score(y_train, y_train_pred)
+print("The model performance for training set")
+print("--------------------------------------")
+print('RMSE is {}'.format(rmse))
+print('R2 score is {}'.format(r2))
+print("\n")
+
+rmse = (np.sqrt(mean_squared_error(y_test, y_test_pred)))
+r2 = r2_score(y_test, y_test_pred)
+print("The model performance for testing set")
+print("--------------------------------------")
+print('RMSE is {}'.format(rmse))
+print('R2 score is {}'.format(r2))
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(x_train.values.reshape(-1, 1), x_train.values.reshape(-1, 1))
+y_pred_rf = rf_model.predict(x_test.values.reshape(-1, 1))
+r2_rf = r2_score(y_test, y_pred_rf)
+rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
+print(f"Random Forest Regression - R2 Score: {r2_rf}")
+print(f"Random Forest Regression - RMSE: {rmse_rf}")
+
+
+
+
