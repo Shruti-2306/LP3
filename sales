@@ -1,0 +1,56 @@
+import pandas as pd
+import numpy as np
+
+df=pd.read_csv('sales_data_sample.csv',encoding='latin1')
+
+df
+
+df.head()
+
+df.isnull().sum()
+
+odf=df.drop(["ADDRESSLINE1","ADDRESSLINE2","STATE","POSTALCODE","TERRITORY"],axis=1)
+
+odf.isnull().sum()
+
+X = odf[['QUANTITYORDERED', 'SALES']]
+
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+wcss = []
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+
+plt.plot(range(1, 11), wcss)
+plt.title('Elbow Method')
+plt.xlabel('Number of clusters')
+plt.ylabel('WCSS')
+plt.show()
+
+optimal_k = 3
+
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+odf['cluster'] = kmeans.fit_predict(X)
+
+centroids = kmeans.cluster_centers_
+
+print(odf[['QUANTITYORDERED', 'SALES', 'cluster']])
+
+plt.scatter(odf['SALES'], odf['QUANTITYORDERED'], c=odf['cluster'])  # Swapped x and y
+plt.scatter(centroids[:, 1], centroids[:, 0], marker='.', s=200, linewidths=3, color='r')  # Swapped centroid coordinates
+plt.xlabel('SALES')
+plt.ylabel('QUANTITYORDERED')
+plt.title('K-Means Clustering with Centroids')
+plt.show()
+
+import seaborn as sns
+
+sns.scatterplot(x='SALES', y='QUANTITYORDERED', hue='cluster', data=odf)
+plt.scatter(centroids[:, 1], centroids[:, 0], marker='.', s=200, linewidths=3, color='r')
+plt.xlabel('SALES')
+plt.ylabel('QUANTITYORDERED')
+plt.title('K-Means Clustering with Centroids')
+
