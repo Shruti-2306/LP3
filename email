@@ -67,3 +67,14 @@ print("Accuracy:", accuracy_score(y_test, svm_predictions))
 print("\n-------------------------------------------------")
 print("Confusion Matrix:\n", confusion_matrix(y_test, svm_predictions))
 
+
+###om sklearn.svm with specific parameters:
+
+kernel='rbf': Specifies the Radial Basis Function (RBF) kernel, also known as the Gaussian kernel. The RBF kernel is a popular choice for SVM as it can handle non-linear relationships by mapping data into a higher-dimensional space.
+
+random_state=1: Ensures reproducibility of the model’s behavior by fixing the random seed to 1. This is especially useful for debugging and comparing results.
+
+gamma=0.1: Controls the influence of a single training example. A lower gamma value (like 0.1) means that the influence radius is broader, which can create a smoother decision boundary but risks underfitting.
+
+C=0.8: The regularization parameter C controls the trade-off between achieving a low error on training data and minimizing the margin (the distance between the decision boundary and data points). A smaller C (like 0.8) allows a wider margin but may allow some misclassifications, helping to avoid overfitting.
+
